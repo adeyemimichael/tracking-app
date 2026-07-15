@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pocket Money Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pocket Money Tracker</h1>
+            <p class="subtitle">Welcome, {{ username }} • pick an option from the menu</p>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card setup-card">
+            <div class="user-bar">
+                <span>👤 {{ username }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-small btn-logout">Logout</a>
+            </div>
+
+            <h2>🎯 Main Menu</h2>
+            <p>Choose one option below to continue.</p>
+
+            <form action="{{ url_for('choose') }}" method="POST" class="menu-options">
+                <button type="submit" name="choice" value="1" class="menu-choice">1. Spend Money</button>
+                <button type="submit" name="choice" value="2" class="menu-choice">2. Check Balance</button>
+                <button type="submit" name="choice" value="3" class="menu-choice">3. View Spending History</button>
+                <button type="submit" name="choice" value="4" class="menu-choice">4. Back to Menu</button>
+            </form>
+        </div>
+
+        {% if current_view == 'spend' %}
+        <div class="card action-card">
+            <h2>💸 Spend Money</h2>
+            <form action="{{ url_for('spend') }}" method="POST">
+                <div class="form-group">
+                    <label for="spent">Enter Amount to Spend:</label>
+                    <input type="number" id="spent" name="spent" required min="1" placeholder="e.g., 500">
+                </div>
+                <div class="form-group">
+                    <label for="note">What did you spend it on? (Optional)</label>
+                    <input type="text" id="note" name="note" placeholder="e.g., Lunch, Books, Transport, Snacks...">
+                </div>
+                <button type="submit" class="btn btn-spend">Record Spending</button>
+            </form>
+            <div class="inline-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-reset">Back to Menu</a>
+            </div>
+        </div>
+        {% elif current_view == 'balance' %}
+        <div class="dashboard">
+            <div class="card balance-card">
+                <h2>Current Balance</h2>
+                <div class="balance-amount {% if balance < 1000 %}low-balance{% endif %}">
+                    ₦{{ "{:,}".format(balance) }}
+                </div>
+                {% if balance < 1000 %}
+                <p class="warning">⚠️ Your balance is low!</p>
+                {% endif %}
+            </div>
+
+            <div class="card stats-card">
+                <h2>Total Spent</h2>
+                <div class="stats-amount">
+                    ₦{{ "{:,}".format(total_spent) }}
+                </div>
+            </div>
+        </div>
+        <div class="inline-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-reset">Back to Menu</a>
+        </div>
+        {% elif current_view == 'history' %}
+        <div class="card history-card">
+            <h2>📜 Spending History</h2>
+            {% if spending_history|length == 0 %}
+            <p class="no-history">No spending history yet.</p>
+            {% else %}
+            <div class="history-list">
+                {% for entry in spending_history %}
+                <div class="history-item">
+                    <span class="history-icon">🛒</span>
+                    <div class="history-details">
+                        <div class="history-amount">₦{{ "{:,}".format(entry['amount']) }}</div>
+                        {% if entry['note'] %}
+                        <div class="history-note">{{ entry['note'] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="history-summary">
+                <strong>Total Transactions:</strong> {{ spending_history|length }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="inline-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-reset">Back to Menu</a>
+        </div>
+        {% endif %}
+
+        <div class="reset-section">
+            <a href="{{ url_for('reset') }}" class="btn btn-reset" onclick="return confirm('Are you sure you want to reset all data?')">
+                🔄 Reset Tracker
+            </a>
+        </div>
+
+        <div class="card setup-card">
+            <h2>💰 Set Your Starting Balance</h2>
+            <p>Enter your pocket money to begin tracking.</p>
+            <form action="{{ url_for('set_balance') }}" method="POST">
+                <div class="form-group">
+                    <label for="balance">Pocket Money:</label>
+                    <input type="number" id="balance" name="balance" required min="1" placeholder="e.g., 5000">
+                </div>
+                <button type="submit" class="btn btn-primary">Save Balance</button>
+            </form>
+        </div>
+
+        <footer>
+            <p>Built with ❤️ by Jomiloju and Iremide for Children</p>
+        </footer>
+    </div>
+</body>
+</html>
